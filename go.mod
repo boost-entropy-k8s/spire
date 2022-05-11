@@ -19,14 +19,14 @@ require (
 	github.com/armon/go-metrics v0.3.11
 	github.com/aws/aws-sdk-go v1.44.0
 	github.com/aws/aws-sdk-go-v2 v1.16.3
-	github.com/aws/aws-sdk-go-v2/config v1.15.4
+	github.com/aws/aws-sdk-go-v2/config v1.15.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v3 v3.2.2
-	github.com/docker/docker v20.10.14+incompatible
+	github.com/docker/docker v20.10.15+incompatible
 	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1
 	github.com/go-logr/logr v1.2.3
 	github.com/go-sql-driver/mysql v1.6.0
@@ -64,10 +64,10 @@ require (
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220502124256-b6088ccd6cba
+	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306
-	google.golang.org/api v0.78.0
-	google.golang.org/genproto v0.0.0-20220429170224-98d788798c3e
+	google.golang.org/api v0.79.0
+	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3
 	google.golang.org/grpc v1.46.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -108,7 +108,6 @@ require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490 // indirect
-	github.com/containerd/containerd v1.6.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
