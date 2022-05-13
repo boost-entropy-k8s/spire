@@ -6,11 +6,11 @@ require (
 	cloud.google.com/go/secretmanager v1.4.0
 	cloud.google.com/go/security v1.3.0
 	cloud.google.com/go/storage v1.22.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.22.0
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.13.2
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v0.5.0
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v0.3.1
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v0.3.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v0.23.1
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v0.14.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v0.7.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v0.5.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v0.5.0
 	github.com/GoogleCloudPlatform/cloudsql-proxy v1.30.1
 	github.com/InVisionApp/go-health/v2 v2.1.2
 	github.com/InVisionApp/go-logger v1.0.1
@@ -48,7 +48,7 @@ require (
 	github.com/imkira/go-observer v1.0.3
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.5
-	github.com/mattn/go-sqlite3 v1.14.12
+	github.com/mattn/go-sqlite3 v1.14.13
 	github.com/mitchellh/cli v1.1.3
 	github.com/open-policy-agent/opa v0.40.0
 	github.com/prometheus/client_golang v1.12.1
