@@ -19,11 +19,11 @@ require (
 	github.com/armon/go-metrics v0.3.11
 	github.com/aws/aws-sdk-go v1.44.0
 	github.com/aws/aws-sdk-go-v2 v1.16.3
-	github.com/aws/aws-sdk-go-v2/config v1.15.5
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.0
+	github.com/aws/aws-sdk-go-v2/config v1.15.6
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.7
-	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.5
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v3 v3.2.2
 	github.com/docker/docker v20.10.16+incompatible
@@ -47,7 +47,7 @@ require (
 	github.com/imdario/mergo v0.3.12
 	github.com/imkira/go-observer v1.0.3
 	github.com/jinzhu/gorm v1.9.16
-	github.com/lib/pq v1.10.5
+	github.com/lib/pq v1.10.6
 	github.com/mattn/go-sqlite3 v1.14.13
 	github.com/mitchellh/cli v1.1.3
 	github.com/open-policy-agent/opa v0.40.0
@@ -68,7 +68,7 @@ require (
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306
 	google.golang.org/api v0.79.0
 	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/api v0.23.6
