@@ -17,7 +17,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Setup dep cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -36,12 +36,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Setup build tool cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -70,7 +70,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -89,7 +89,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -108,12 +108,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Load cached build tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -122,7 +122,7 @@ jobs:
       - name: Build artifacts
         run: ./.github/workflows/scripts/build_artifacts.sh
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: binaries
           path: ./artifacts/
@@ -139,12 +139,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Load cached build tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -155,7 +155,7 @@ jobs:
       - name: Export images
         run: docker save spire-server:latest-local spire-agent:latest-local k8s-workload-registrar:latest-local oidc-discovery-provider:latest-local | gzip > images.tar.gz
       - name: Archive images
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: images
           path: images.tar.gz
@@ -179,7 +179,7 @@ jobs:
           docker save spire-server-windows:latest-local spire-agent-windows:latest-local oidc-discovery-provider-windows:latest-local -o images-windows.tar
           gzip images-windows.tar
       - name: Archive images
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: images-windows
           path: images-windows.tar.gz
@@ -195,12 +195,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Load cached build tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -211,7 +211,7 @@ jobs:
       - name: Export scratch images
         run: docker save spire-server-scratch:latest-local spire-agent-scratch:latest-local k8s-workload-registrar-scratch:latest-local oidc-discovery-provider-scratch:latest-local | gzip > scratch-images.tar.gz
       - name: Archive scratch images
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: scratch-images
           path: scratch-images.tar.gz
@@ -248,12 +248,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Load cached build tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -300,12 +300,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Load cached build tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -344,7 +344,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Setup dep cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -366,12 +366,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Setup build tool cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -409,7 +409,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -441,12 +441,12 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Load cached deps
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
       - name: Load cached build tools
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .build
           key: ${{ runner.os }}-tools-${{ github.sha }}
@@ -466,12 +466,12 @@ jobs:
       - name: Build artifacts
         run: ./.github/workflows/scripts/build_artifacts.sh
       - name: Archive binaries
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: bin-windows
           path: ./bin/
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: binaries
           path: ./artifacts/
