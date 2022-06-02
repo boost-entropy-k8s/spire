@@ -52,7 +52,7 @@ require (
 	github.com/mitchellh/cli v1.1.4
 	github.com/open-policy-agent/opa v0.40.0
 	github.com/prometheus/client_golang v1.12.2
-	github.com/shirou/gopsutil/v3 v3.22.4
+	github.com/shirou/gopsutil/v3 v3.22.5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spiffe/go-spiffe/v2 v2.0.1-0.20220414143532-2ed460a8b9d3
 	github.com/spiffe/spire-api-sdk v1.2.2-0.20220317172821-e2705b35aa09
@@ -68,7 +68,7 @@ require (
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306
 	google.golang.org/api v0.81.0
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
-	google.golang.org/grpc v1.46.2
+	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/api v0.23.6
