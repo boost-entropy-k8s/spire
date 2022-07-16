@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.9
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.17.10
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.48.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.9
 	github.com/aws/aws-sdk-go-v2/service/kms v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.13
@@ -46,7 +46,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hashicorp/hcl v1.0.1-0.20190430135223-99e2f22d1c94
 	github.com/hashicorp/vault/api v1.7.2
-	github.com/hashicorp/vault/sdk v0.5.2
+	github.com/hashicorp/vault/sdk v0.5.3
 	github.com/imdario/mergo v0.3.13
 	github.com/imkira/go-observer v1.0.3
 	github.com/jinzhu/gorm v1.9.16
