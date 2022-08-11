@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/secretmanager v1.5.0
 	cloud.google.com/go/security v1.4.1
 	cloud.google.com/go/storage v1.24.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.1.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.1.2
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0
@@ -18,14 +18,14 @@ require (
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129
 	github.com/armon/go-metrics v0.4.0
 	github.com/aws/aws-sdk-go-v2 v1.16.10
-	github.com/aws/aws-sdk-go-v2/config v1.15.17
+	github.com/aws/aws-sdk-go-v2/config v1.16.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.12
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.11
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.17.12
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.51.3
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.17.14
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.12
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.3
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.14
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.16
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.12
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v3 v3.2.2
