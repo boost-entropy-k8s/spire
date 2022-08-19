@@ -22,10 +22,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.14
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.12
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.17.15
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.13
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.4
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.17
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.15.18
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.13
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v3 v3.2.2
@@ -50,7 +50,7 @@ require (
 	github.com/imkira/go-observer v1.0.3
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.6
-	github.com/mattn/go-sqlite3 v1.14.14
+	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/mitchellh/cli v1.1.4
 	github.com/open-policy-agent/opa v0.43.0
 	github.com/prometheus/client_golang v1.13.0
@@ -67,14 +67,14 @@ require (
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	golang.org/x/sys v0.0.0-20220731174439-a90be440212d
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9
-	google.golang.org/api v0.92.0
+	google.golang.org/api v0.93.0
 	google.golang.org/genproto v0.0.0-20220801145646-83ce21fca29f
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/square/go-jose.v2 v2.6.0
-	k8s.io/api v0.24.3
-	k8s.io/apimachinery v0.24.3
-	k8s.io/client-go v0.24.3
+	k8s.io/api v0.24.4
+	k8s.io/apimachinery v0.24.4
+	k8s.io/client-go v0.24.4
 	k8s.io/kube-aggregator v0.23.3
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	sigs.k8s.io/controller-runtime v0.12.3
