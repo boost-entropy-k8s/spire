@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.17
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.14
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.18.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.16
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.16.0
@@ -67,7 +67,7 @@ require (
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	golang.org/x/sys v0.0.0-20220907062415-87db552b00fd
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9
-	google.golang.org/api v0.96.0
+	google.golang.org/api v0.97.0
 	google.golang.org/genproto v0.0.0-20220920201722-2b89144ce006
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
