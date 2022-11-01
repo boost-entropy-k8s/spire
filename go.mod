@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.17
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.14
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.19.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.64.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.16
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.16.0
@@ -31,7 +31,7 @@ require (
 	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1
 	github.com/go-logr/logr v1.2.3
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/gofrs/uuid v4.3.0+incompatible
+	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.9
@@ -42,7 +42,7 @@ require (
 	github.com/hashicorp/go-hclog v1.3.1
 	github.com/hashicorp/go-plugin v1.4.5
 	github.com/hashicorp/hcl v1.0.1-0.20190430135223-99e2f22d1c94
-	github.com/hashicorp/vault/api v1.8.1
+	github.com/hashicorp/vault/api v1.8.2
 	github.com/hashicorp/vault/sdk v0.6.1
 	github.com/imdario/mergo v0.3.13
 	github.com/imkira/go-observer v1.0.3
