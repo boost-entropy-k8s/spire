@@ -3,10 +3,10 @@ module github.com/spiffe/spire
 go 1.19
 
 require (
-	cloud.google.com/go/secretmanager v1.8.0
-	cloud.google.com/go/security v1.9.0
+	cloud.google.com/go/secretmanager v1.9.0
+	cloud.google.com/go/security v1.10.0
 	cloud.google.com/go/storage v1.27.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.1.4
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0
@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.17
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.14
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.19.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.16
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.16.0
@@ -50,7 +50,7 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/cli v1.1.4
-	github.com/open-policy-agent/opa v0.45.0
+	github.com/open-policy-agent/opa v0.46.1
 	github.com/prometheus/client_golang v1.13.1
 	github.com/shirou/gopsutil/v3 v3.22.10
 	github.com/sirupsen/logrus v1.9.0
@@ -63,10 +63,10 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.0.0-20220907062415-87db552b00fd
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14
 	golang.org/x/time v0.1.0
 	google.golang.org/api v0.102.0
-	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e
+	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -79,10 +79,11 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.104.0 // indirect
+	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.12.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
-	cloud.google.com/go/iam v0.5.0 // indirect
+	cloud.google.com/go/iam v0.6.0 // indirect
+	cloud.google.com/go/longrunning v0.1.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.0.0 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.27 // indirect
@@ -112,7 +113,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
@@ -121,7 +122,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/fsnotify/fsnotify v1.5.4 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/zapr v1.2.3 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
