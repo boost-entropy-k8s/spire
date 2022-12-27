@@ -811,8 +811,8 @@ github.com/hashicorp/memberlist v0.1.3/go.mod h1:ajVTdAv/9Im8oMAAj5G31PhhMCZJV2p
 github.com/hashicorp/serf v0.8.2/go.mod h1:6hOLApaqBFA1NXqRQAsxw9QxuDEvNxSQRwA/JwenrHc=
 github.com/hashicorp/vault/api v1.8.2 h1:C7OL9YtOtwQbTKI9ogB0A1wffRbCN+rH/LLCHO3d8HM=
 github.com/hashicorp/vault/api v1.8.2/go.mod h1:ML8aYzBIhY5m1MD1B2Q0JV89cC85YVH4t5kBaZiyVaE=
-github.com/hashicorp/vault/sdk v0.6.1 h1:sjZC1z4j5Rh2GXYbkxn5BLK05S1p7+MhW4AgdUmgRUA=
-github.com/hashicorp/vault/sdk v0.6.1/go.mod h1:Ck4JuAC6usTphfrrRJCRH+7/N7O2ozZzkm/fzQFt4uM=
+github.com/hashicorp/vault/sdk v0.6.2 h1:LtWXUM+WheM5T8pOO/6nOTiFwnE+4y3bPztFf15Oz24=
+github.com/hashicorp/vault/sdk v0.6.2/go.mod h1:KyfArJkhooyba7gYCKSq8v66QdqJmnbAxtV/OX1+JTs=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d h1:kJCB4vdITiW1eC1vq2e6IsrXKrZit1bv/TDYFGMp4BQ=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
@@ -1018,8 +1018,8 @@ github.com/onsi/gomega v0.0.0-20170829124025-dcabb60a477c/go.mod h1:C1qb7wdrVGGV
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.23.0 h1:/oxKu9c2HVap+F3PfKort2Hw5DEU+HGlW8n+tguWsys=
-github.com/open-policy-agent/opa v0.47.3 h1:Uj8zw+q6Cvv1iiQFh704Q6sl3fKVvk35WZNJLsd6mgk=
-github.com/open-policy-agent/opa v0.47.3/go.mod h1:I5DbT677OGqfk9gvu5i54oIt0rrVf4B5pedpqDquAXo=
+github.com/open-policy-agent/opa v0.47.4 h1:CTPIoAv6/UJX+BkSkqytbofWrZHyfQ/A0ESE4FSKR9A=
+github.com/open-policy-agent/opa v0.47.4/go.mod h1:I5DbT677OGqfk9gvu5i54oIt0rrVf4B5pedpqDquAXo=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 h1:rc3tiVYb5z54aKaDfakKn0dDjIyPpTtszkjuMzyt7ec=
