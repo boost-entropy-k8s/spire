@@ -96,10 +96,6 @@ type serverConfig struct {
 	ProfilingFreq    int      `hcl:"profiling_freq"`
 	ProfilingNames   []string `hcl:"profiling_names"`
 
-	// Deprecated: remove in SPIRE 1.6.0
-	DefaultSVIDTTL  string `hcl:"default_svid_ttl"`
-	OmitX509SVIDUID *bool  `hcl:"omit_x509svid_uid"`
-
 	UnusedKeys []string `hcl:",unusedKeys"`
 }
 
@@ -480,18 +476,6 @@ func NewServerConfig(c *Config, logOptions []log.Option, allowUnknownConfig bool
 			return nil, fmt.Errorf("could not parse default X509 SVID ttl %q: %w", c.Server.DefaultX509SVIDTTL, err)
 		}
 		sc.X509SVIDTTL = ttl
-
-		if sc.X509SVIDTTL != 0 && c.Server.DefaultSVIDTTL != "" {
-			logger.Warnf("both default_x509_svid_ttl and default_svid_ttl are configured; default_x509_svid_ttl (%s) will be used for X509-SVIDs", c.Server.DefaultX509SVIDTTL)
-		}
-	case c.Server.DefaultSVIDTTL != "":
-		logger.Warn("field default_svid_ttl is deprecated; consider using default_x509_svid_ttl and default_jwt_svid_ttl instead")
-
-		ttl, err := time.ParseDuration(c.Server.DefaultSVIDTTL)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse default SVID ttl %q: %w", c.Server.DefaultSVIDTTL, err)
-		}
-		sc.X509SVIDTTL = ttl
 	default:
 		// If neither new nor deprecated config value is set, then use hard-coded default TTL
 		// Note, due to back-compat issues we cannot set this default inside defaultConfig() function
@@ -504,10 +488,6 @@ func NewServerConfig(c *Config, logOptions []log.Option, allowUnknownConfig bool
 			return nil, fmt.Errorf("could not parse default JWT SVID ttl %q: %w", c.Server.DefaultJWTSVIDTTL, err)
 		}
 		sc.JWTSVIDTTL = ttl
-
-		if sc.JWTSVIDTTL != 0 && c.Server.DefaultSVIDTTL != "" {
-			logger.Warnf("both default_jwt_svid_ttl and default_svid_ttl are configured; default_jwt_svid_ttl (%s) will be used for JWT-SVIDs", c.Server.DefaultJWTSVIDTTL)
-		}
 	} else {
 		// If not set using new field then use hard-coded default TTL
 		// Note, due to back-compat issues we cannot set this default inside defaultConfig() function
@@ -529,7 +509,7 @@ func NewServerConfig(c *Config, logOptions []log.Option, allowUnknownConfig bool
 		ttl  time.Duration
 	}{
 		{
-			name: "default_x509_svid_ttl (or deprecated default_svid_ttl)",
+			name: "default_x509_svid_ttl",
 			ttl:  sc.X509SVIDTTL,
 		},
 		{
@@ -612,11 +592,6 @@ func NewServerConfig(c *Config, logOptions []log.Option, allowUnknownConfig bool
 	// RFC3280(4.1.2.4) requires the issuer DN be set.
 	if isPKIXNameEmpty(sc.CASubject) {
 		sc.CASubject = defaultCASubject
-	}
-
-	if c.Server.OmitX509SVIDUID != nil {
-		sc.Log.Warn("The omit_x509svid_uid flag is deprecated and will be removed from a future release")
-		sc.OmitX509SVIDUID = *c.Server.OmitX509SVIDUID
 	}
 
 	sc.PluginConfigs = *c.Plugins
