@@ -34,7 +34,7 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/golang-jwt/jwt/v4 v4.4.2
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.9
@@ -65,7 +65,7 @@ require (
 	github.com/spiffe/spire-api-sdk v1.2.5-0.20221020001527-5895a0279944
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20230203133000-75d7213a0ba0
 	github.com/stretchr/testify v1.8.1
-	github.com/uber-go/tally/v4 v4.1.5
+	github.com/uber-go/tally/v4 v4.1.6
 	github.com/zeebo/errs v1.3.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/net v0.5.0
