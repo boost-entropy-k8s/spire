@@ -53,7 +53,7 @@ require (
 	github.com/mitchellh/cli v1.1.5
 	github.com/open-policy-agent/opa v0.49.2
 	github.com/prometheus/client_golang v1.14.0
-	github.com/shirou/gopsutil/v3 v3.23.1
+	github.com/shirou/gopsutil/v3 v3.23.2
 	github.com/sigstore/cosign v1.13.1
 	github.com/sigstore/rekor v1.0.1
 	github.com/sigstore/sigstore v1.5.2
@@ -61,7 +61,7 @@ require (
 	github.com/spiffe/go-spiffe/v2 v2.1.2
 	github.com/spiffe/spire-api-sdk v1.2.5-0.20221020001527-5895a0279944
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20230203133000-75d7213a0ba0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/uber-go/tally/v4 v4.1.6
 	github.com/zeebo/errs v1.3.0
 	golang.org/x/crypto v0.6.0
