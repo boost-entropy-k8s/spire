@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto"
+	"crypto/x509"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/spire-api-sdk/proto/spire/api/types"
 	"github.com/spiffe/spire/pkg/common/bundleutil"
+	"github.com/spiffe/spire/pkg/common/cryptoutil"
 	"github.com/spiffe/spire/pkg/common/protoutil"
 	"github.com/spiffe/spire/pkg/common/telemetry"
 	"github.com/spiffe/spire/pkg/server/datastore"
@@ -201,17 +203,34 @@ func (ds *Plugin) PruneBundle(ctx context.Context, trustDomainID string, expires
 
 // TaintX509CAByKey taints an X.509 CA signed using the provided public key
 func (ds *Plugin) TaintX509CA(ctx context.Context, trustDoaminID string, publicKey crypto.PublicKey) error {
-	return errors.New("unimplemented")
+	if err := ds.withReadModifyWriteTx(ctx, func(tx *gorm.DB) (err error) {
+		return taintX509CA(tx, trustDoaminID, publicKey)
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // RevokeX509CA removes a Root CA from the bundle
 func (ds *Plugin) RevokeX509CA(ctx context.Context, trustDoaminID string, publicKey crypto.PublicKey) error {
-	return errors.New("unimplemented")
+	if err := ds.withReadModifyWriteTx(ctx, func(tx *gorm.DB) (err error) {
+		return revokeX509CA(tx, trustDoaminID, publicKey)
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // TaintJWTKey taints a JWT Authority key
 func (ds *Plugin) TaintJWTKey(ctx context.Context, trustDoaminID string, keyID string) (*common.PublicKey, error) {
-	return nil, errors.New("unimplemented")
+	var taintedKey *common.PublicKey
+	if err := ds.withReadModifyWriteTx(ctx, func(tx *gorm.DB) (err error) {
+		taintedKey, err = taintJWTKey(tx, trustDoaminID, keyID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	return taintedKey, nil
 }
 
 // RevokeJWTAuthority removes JWT key from the bundle
@@ -760,9 +779,28 @@ func (ds *Plugin) openDB(cfg *configuration, isReadOnly bool) (*gorm.DB, string,
 			db.Close()
 			return nil, "", false, nil, err
 		}
+		// TODO: we should keep this logic for a minor release cycle to make sure stale entries are removed eventually.
+		// Remove in SPIRE 1.8.0
+		if err := cleanStaleNodeResolverEntries(db, ds.log); err != nil {
+			ds.log.WithError(err).Error("Failed to clean stale node resolver entries")
+		}
 	}
 
 	return db, version, supportsCTE, dialect, nil
+}
+
+func cleanStaleNodeResolverEntries(tx *gorm.DB, log logrus.FieldLogger) error {
+	result := tx.Delete(&NodeSelector{}, fmt.Sprintf("spiffe_id NOT IN (SELECT spiffe_id FROM %s)", AttestedNode{}.TableName()))
+
+	if result.Error != nil {
+		return sqlError.Wrap(result.Error)
+	}
+
+	if result.RowsAffected > 0 {
+		log.Infof("Deleted %d stale node resolver entries", result.RowsAffected)
+	}
+
+	return nil
 }
 
 type gormLogger struct {
@@ -1050,6 +1088,150 @@ func pruneBundle(tx *gorm.DB, trustDomainID string, expiry time.Time, log logrus
 	}
 
 	return changed, nil
+}
+
+func taintX509CA(tx *gorm.DB, trustDomainID string, taintedPublicKey crypto.PublicKey) error {
+	_, bundle, err := getBundle(tx, trustDomainID)
+	if err != nil {
+		return err
+	}
+
+	var found bool
+	for _, ca := range bundle.RootCas {
+		rootCACert, err := x509.ParseCertificate(ca.DerBytes)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to parse root CA: %v", err)
+		}
+
+		ok, err := cryptoutil.PublicKeyEqual(rootCACert.PublicKey, taintedPublicKey)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to compare public key: %v", err)
+		}
+		if ok {
+			if ca.TaintedKey {
+				return status.Errorf(codes.InvalidArgument, "root CA is already tainted")
+			}
+
+			// Do not break the loop here so we can be sure
+			// that we taint all bundles associated with the
+			// given public key.
+			// We also check if there is at least one bundle
+			// signed by the provided key. If not, the function
+			// returns codes.NotFound status error.
+			found = true
+			ca.TaintedKey = true
+		}
+	}
+
+	if !found {
+		return status.Error(codes.NotFound, "no root CA found with provided public key")
+	}
+
+	_, err = updateBundle(tx, bundle, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func revokeX509CA(tx *gorm.DB, trustDomainID string, publicKey crypto.PublicKey) error {
+	_, bundle, err := getBundle(tx, trustDomainID)
+	if err != nil {
+		return err
+	}
+
+	found := false
+	var rootCAs []*common.Certificate
+	for _, ca := range bundle.RootCas {
+		cert, err := x509.ParseCertificate(ca.DerBytes)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to parse root CA: %v", err)
+		}
+
+		ok, err := cryptoutil.PublicKeyEqual(cert.PublicKey, publicKey)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to compare public key: %v", err)
+		}
+
+		if ok {
+			if !ca.TaintedKey {
+				return status.Error(codes.InvalidArgument, "it is not possible to revoke an untainted root CA")
+			}
+			found = true
+			continue
+		}
+		rootCAs = append(rootCAs, ca)
+	}
+	bundle.RootCas = rootCAs
+
+	if !found {
+		return status.Error(codes.NotFound, "no root CA found with provided public key")
+	}
+
+	if _, err := updateBundle(tx, bundle, nil); err != nil {
+		return status.Errorf(codes.Internal, "failed to update bundle: %v", err)
+	}
+
+	return nil
+}
+
+func taintJWTKey(tx *gorm.DB, trustDomainID string, keyID string) (*common.PublicKey, error) {
+	model, bundle, err := getBundle(tx, trustDomainID)
+	if err != nil {
+		return nil, err
+	}
+
+	var taintedKey *common.PublicKey
+	for _, jwtKey := range bundle.JwtSigningKeys {
+		if jwtKey.Kid != keyID {
+			continue
+		}
+
+		if jwtKey.TaintedKey {
+			return nil, status.Error(codes.InvalidArgument, "key is already tainted")
+		}
+
+		// Check if a JWT Key with the provided keyID was already
+		// tainted in this loop. This is purely defensive since we do not
+		// allow to have repeated key IDs.
+		if taintedKey != nil {
+			return nil, status.Error(codes.Internal, "another JWT Key found with the same KeyID")
+		}
+		taintedKey = jwtKey
+		jwtKey.TaintedKey = true
+	}
+
+	if taintedKey == nil {
+		return nil, status.Error(codes.NotFound, "no JWT Key found with provided public key")
+	}
+
+	newModel, err := bundleToModel(bundle)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to parse bundle to model: %v", err)
+	}
+
+	model.Data = newModel.Data
+
+	if err := tx.Save(model).Error; err != nil {
+		return nil, sqlError.Wrap(err)
+	}
+
+	return taintedKey, nil
+}
+
+func getBundle(tx *gorm.DB, trustDomainID string) (*Bundle, *common.Bundle, error) {
+	model := &Bundle{}
+	if err := tx.Find(model, "trust_domain = ?", trustDomainID).Error; err != nil {
+		return nil, nil, sqlError.Wrap(err)
+	}
+
+	bundle, err := modelToBundle(model)
+	if err != nil {
+		return nil, nil, status.Errorf(codes.Internal, "failed to unmarshal bundle: %v", err)
+	}
+
+	return model, bundle, nil
 }
 
 func createAttestedNode(tx *gorm.DB, node *common.AttestedNode) (*common.AttestedNode, error) {

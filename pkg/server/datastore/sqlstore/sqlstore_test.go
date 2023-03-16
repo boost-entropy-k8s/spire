@@ -30,6 +30,7 @@ import (
 	"github.com/spiffe/spire/proto/spire/common"
 	"github.com/spiffe/spire/test/clock"
 	"github.com/spiffe/spire/test/spiretest"
+	"github.com/spiffe/spire/test/testkey"
 	testutil "github.com/spiffe/spire/test/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -590,6 +591,171 @@ func (s *PluginSuite) TestBundlePrune() {
 	fb, err := s.ds.FetchBundle(ctx, "spiffe://foo")
 	s.Require().NoError(err)
 	s.AssertProtoEqual(expectedPrunedBundle, fb)
+}
+
+func (s *PluginSuite) TestTaintX509CA() {
+	t := s.T()
+
+	// Setup
+	unusedKey := testkey.NewRSA2048(t)
+
+	keyForMalformedCert := testkey.NewEC256(t)
+	malformedX509 := &x509.Certificate{
+		PublicKey: keyForMalformedCert.PublicKey,
+		Raw:       []byte("not a certificate"),
+	}
+
+	// Create new bundle with two certs
+	bundle := bundleutil.BundleProtoFromRootCAs("spiffe://foo", []*x509.Certificate{s.cert, s.cacert, malformedX509})
+
+	// Bundle not found
+	err := s.ds.TaintX509CA(ctx, "spiffe://foo", unusedKey.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, _notFoundErrMsg)
+
+	_, err = s.ds.CreateBundle(ctx, bundle)
+	require.NoError(t, err)
+
+	// Bundle contains malformed CA
+	err = s.ds.TaintX509CA(ctx, "spiffe://foo", s.cert.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.Internal, "failed to parse root CA: x509: malformed certificate")
+
+	// Remove malformed certificate
+	bundle.RootCas = []*common.Certificate{{DerBytes: s.cert.Raw}, {DerBytes: s.cacert.Raw}}
+	_, err = s.ds.UpdateBundle(ctx, bundle, nil)
+	require.NoError(t, err)
+
+	// No root CA is using provided key
+	err = s.ds.TaintX509CA(ctx, "spiffe://foo", unusedKey.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, "no root CA found with provided public key")
+
+	// Taint successfully
+	err = s.ds.TaintX509CA(ctx, "spiffe://foo", s.cert.PublicKey)
+	require.NoError(t, err)
+
+	fetchedBundle, err := s.ds.FetchBundle(ctx, "spiffe://foo")
+	require.NoError(t, err)
+
+	expectedRootCAs := []*common.Certificate{
+		{DerBytes: s.cert.Raw, TaintedKey: true},
+		{DerBytes: s.cacert.Raw},
+	}
+	require.Equal(t, expectedRootCAs, fetchedBundle.RootCas)
+
+	// Not able to taint a tainted CA
+	err = s.ds.TaintX509CA(ctx, "spiffe://foo", s.cert.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.InvalidArgument, "root CA is already tainted")
+}
+
+func (s *PluginSuite) TestRevokeX509CA() {
+	t := s.T()
+
+	// Setup
+	unusedKey := testkey.NewRSA2048(t)
+
+	keyForMalformedCert := testkey.NewEC256(t)
+	malformedX509 := &x509.Certificate{
+		PublicKey: keyForMalformedCert.PublicKey,
+		Raw:       []byte("no a certificate"),
+	}
+
+	// Create new bundle with two cert (one valid and one expired)
+	bundle := bundleutil.BundleProtoFromRootCAs("spiffe://foo", []*x509.Certificate{s.cert, s.cacert, malformedX509})
+
+	// Bundle not found
+	err := s.ds.RevokeX509CA(ctx, "spiffe://foo", unusedKey.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, _notFoundErrMsg)
+
+	_, err = s.ds.CreateBundle(ctx, bundle)
+	require.NoError(t, err)
+
+	// Bundle contains malformed CA
+	err = s.ds.RevokeX509CA(ctx, "spiffe://foo", unusedKey.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.Internal, "failed to parse root CA: x509: malformed certificate")
+
+	// Remove malformed certificate
+	bundle.RootCas = []*common.Certificate{{DerBytes: s.cert.Raw}, {DerBytes: s.cacert.Raw}}
+	_, err = s.ds.UpdateBundle(ctx, bundle, nil)
+	require.NoError(t, err)
+
+	// No root CA is using provided key
+	err = s.ds.RevokeX509CA(ctx, "spiffe://foo", unusedKey.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, "no root CA found with provided public key")
+
+	// No able to revoke untainted bundles
+	err = s.ds.RevokeX509CA(ctx, "spiffe://foo", s.cert.PublicKey)
+	spiretest.RequireGRPCStatus(t, err, codes.InvalidArgument, "it is not possible to revoke an untainted root CA")
+
+	// Mark cert as tainted
+	bundle.RootCas = []*common.Certificate{
+		{DerBytes: s.cert.Raw, TaintedKey: true},
+		{DerBytes: s.cacert.Raw},
+	}
+
+	_, err = s.ds.UpdateBundle(ctx, bundle, nil)
+	require.NoError(t, err)
+
+	// Revoke successfully
+	err = s.ds.RevokeX509CA(ctx, "spiffe://foo", s.cert.PublicKey)
+	require.NoError(t, err)
+
+	fetchedBunde, err := s.ds.FetchBundle(ctx, "spiffe://foo")
+	require.NoError(t, err)
+
+	expectedRootCAs := []*common.Certificate{
+		{DerBytes: s.cacert.Raw},
+	}
+
+	require.Equal(t, expectedRootCAs, fetchedBunde.RootCas)
+}
+
+func (s *PluginSuite) TestTaintJWTKey() {
+	t := s.T()
+	// Setup
+	// Create new bundle with two JWT Keys
+	bundle := bundleutil.BundleProtoFromRootCAs("spiffe://foo", nil)
+	bundle.JwtSigningKeys = []*common.PublicKey{
+		{Kid: "key1"},
+		{Kid: "key2"},
+		{Kid: "key2"},
+	}
+
+	// Bundle not found
+	publicKey, err := s.ds.TaintJWTKey(ctx, "spiffe://foo", "key1")
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, _notFoundErrMsg)
+	require.Nil(t, publicKey)
+
+	_, err = s.ds.CreateBundle(ctx, bundle)
+	require.NoError(t, err)
+
+	// Bundle contains repeated key
+	publicKey, err = s.ds.TaintJWTKey(ctx, "spiffe://foo", "key2")
+	spiretest.RequireGRPCStatus(t, err, codes.Internal, "another JWT Key found with the same KeyID")
+	require.Nil(t, publicKey)
+
+	// Key not found
+	publicKey, err = s.ds.TaintJWTKey(ctx, "spiffe://foo", "no id")
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, "no JWT Key found with provided public key")
+	require.Nil(t, publicKey)
+
+	// Taint successfully
+	publicKey, err = s.ds.TaintJWTKey(ctx, "spiffe://foo", "key1")
+	require.NoError(t, err)
+	require.NotNil(t, publicKey)
+
+	fetchedBundle, err := s.ds.FetchBundle(ctx, "spiffe://foo")
+	require.NoError(t, err)
+
+	expectedKeys := []*common.PublicKey{
+		{Kid: "key1", TaintedKey: true},
+		{Kid: "key2"},
+		{Kid: "key2"},
+	}
+	require.Equal(t, expectedKeys, fetchedBundle.JwtSigningKeys)
+
+	// No able to taint Key again
+	publicKey, err = s.ds.TaintJWTKey(ctx, "spiffe://foo", "key1")
+	spiretest.RequireGRPCStatus(t, err, codes.InvalidArgument, "key is already tainted")
+	require.Nil(t, publicKey)
 }
 
 func (s *PluginSuite) TestCreateAttestedNode() {
@@ -4010,6 +4176,67 @@ func (s *PluginSuite) TestUpdateFederationRelationship() {
 			s.Require().Equal(tt.expFR, updatedFR)
 		})
 	}
+}
+
+func (s *PluginSuite) TestCleanStaleNodeResolverEntries() {
+	deletedNodeSPIFFEID := "thisNodeDoesNotExist"
+	existentNode := &common.AttestedNode{
+		SpiffeId:            "foo",
+		AttestationDataType: "aws-tag",
+		CertSerialNumber:    "badcafe",
+		CertNotAfter:        time.Now().Add(time.Hour).Unix(),
+	}
+
+	selectors := []*common.Selector{
+		{Type: "TYPE1", Value: "VALUE1"},
+		{Type: "TYPE2", Value: "VALUE2"},
+		{Type: "TYPE3", Value: "VALUE3"},
+		{Type: "TYPE4", Value: "VALUE4"},
+	}
+	_, err := s.ds.CreateAttestedNode(ctx, existentNode)
+	require.NoError(s.T(), err)
+	err = s.ds.SetNodeSelectors(ctx, existentNode.SpiffeId, selectors)
+	require.NoError(s.T(), err)
+	nodeSelectors, err := s.ds.GetNodeSelectors(ctx, existentNode.SpiffeId, datastore.RequireCurrent)
+	s.Require().NoError(err)
+	s.Equal(selectors, nodeSelectors)
+
+	err = s.ds.SetNodeSelectors(ctx, deletedNodeSPIFFEID, selectors)
+	require.NoError(s.T(), err)
+	staleNodeSelectors, err := s.ds.GetNodeSelectors(ctx, deletedNodeSPIFFEID, datastore.RequireCurrent)
+	s.Require().NoError(err)
+	s.Equal(selectors, staleNodeSelectors)
+
+	// Initialize a new datastore to force a cleanup of stale node resolver entries
+	dbPath := s.ds.db.connectionString
+	databaseType := s.ds.db.databaseType
+	err = s.ds.Close()
+	s.Require().NoError(err)
+	s.ds.db = nil
+	err = s.ds.Configure(ctx, fmt.Sprintf(`
+			database_type = "%s"
+			log_sql = true
+			connection_string = "%s"
+            ro_connection_string = "%s"
+		`, databaseType, dbPath, TestROConnString))
+	s.Require().NoError(err)
+
+	spiretest.AssertLogsContainEntries(s.T(), s.hook.AllEntries(), []spiretest.LogEntry{
+		{
+			Level:   logrus.InfoLevel,
+			Message: "Deleted 4 stale node resolver entries",
+		},
+	})
+
+	// Check that stale node selectors were deleted since the underlying attested node entry does not exist
+	staleNodeSelectors, err = s.ds.GetNodeSelectors(ctx, deletedNodeSPIFFEID, datastore.RequireCurrent)
+	s.Require().NoError(err)
+	s.Empty(staleNodeSelectors)
+
+	// Check that foo node selectors were not deleted because the attested node entry still exists
+	nodeSelectors, err = s.ds.GetNodeSelectors(ctx, existentNode.SpiffeId, datastore.RequireCurrent)
+	s.Require().NoError(err)
+	s.Equal(selectors, nodeSelectors)
 }
 
 func (s *PluginSuite) TestMigration() {
