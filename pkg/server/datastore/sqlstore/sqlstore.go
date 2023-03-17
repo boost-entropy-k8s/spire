@@ -235,7 +235,14 @@ func (ds *Plugin) TaintJWTKey(ctx context.Context, trustDoaminID string, keyID s
 
 // RevokeJWTAuthority removes JWT key from the bundle
 func (ds *Plugin) RevokeJWTKey(ctx context.Context, trustDoaminID string, keyID string) (*common.PublicKey, error) {
-	return nil, errors.New("unimplemented")
+	var revokedKey *common.PublicKey
+	if err := ds.withReadModifyWriteTx(ctx, func(tx *gorm.DB) (err error) {
+		revokedKey, err = revokeJWTKey(tx, trustDoaminID, keyID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	return revokedKey, nil
 }
 
 // CreateAttestedNode stores the given attested node
@@ -479,7 +486,7 @@ func (ds *Plugin) PruneJoinTokens(ctx context.Context, expiry time.Time) (err er
 // CreateFederationRelationship creates a new federation relationship. If the bundle endpoint
 // profile is 'https_spiffe' and the given federation relationship contains a bundle, the current
 // stored bundle is overridden.
-// If no bundle is provided and there is not a previusly stored bundle in the datastore, the
+// If no bundle is provided and there is not a previously stored bundle in the datastore, the
 // federation relationship is not created.
 func (ds *Plugin) CreateFederationRelationship(ctx context.Context, fr *datastore.FederationRelationship) (newFr *datastore.FederationRelationship, err error) {
 	if err := validateFederationRelationship(fr, protoutil.AllTrueFederationRelationshipMask); err != nil {
@@ -1091,7 +1098,7 @@ func pruneBundle(tx *gorm.DB, trustDomainID string, expiry time.Time, log logrus
 }
 
 func taintX509CA(tx *gorm.DB, trustDomainID string, taintedPublicKey crypto.PublicKey) error {
-	_, bundle, err := getBundle(tx, trustDomainID)
+	bundle, err := getBundle(tx, trustDomainID)
 	if err != nil {
 		return err
 	}
@@ -1136,7 +1143,7 @@ func taintX509CA(tx *gorm.DB, trustDomainID string, taintedPublicKey crypto.Publ
 }
 
 func revokeX509CA(tx *gorm.DB, trustDomainID string, publicKey crypto.PublicKey) error {
-	_, bundle, err := getBundle(tx, trustDomainID)
+	bundle, err := getBundle(tx, trustDomainID)
 	if err != nil {
 		return err
 	}
@@ -1177,7 +1184,7 @@ func revokeX509CA(tx *gorm.DB, trustDomainID string, publicKey crypto.PublicKey)
 }
 
 func taintJWTKey(tx *gorm.DB, trustDomainID string, keyID string) (*common.PublicKey, error) {
-	model, bundle, err := getBundle(tx, trustDomainID)
+	bundle, err := getBundle(tx, trustDomainID)
 	if err != nil {
 		return nil, err
 	}
@@ -1203,35 +1210,67 @@ func taintJWTKey(tx *gorm.DB, trustDomainID string, keyID string) (*common.Publi
 	}
 
 	if taintedKey == nil {
-		return nil, status.Error(codes.NotFound, "no JWT Key found with provided public key")
+		return nil, status.Error(codes.NotFound, "no JWT Key found with provided key ID")
 	}
 
-	newModel, err := bundleToModel(bundle)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to parse bundle to model: %v", err)
-	}
-
-	model.Data = newModel.Data
-
-	if err := tx.Save(model).Error; err != nil {
-		return nil, sqlError.Wrap(err)
+	if _, err := updateBundle(tx, bundle, nil); err != nil {
+		return nil, err
 	}
 
 	return taintedKey, nil
 }
 
-func getBundle(tx *gorm.DB, trustDomainID string) (*Bundle, *common.Bundle, error) {
+func revokeJWTKey(tx *gorm.DB, trustDomainID string, keyID string) (*common.PublicKey, error) {
+	bundle, err := getBundle(tx, trustDomainID)
+	if err != nil {
+		return nil, err
+	}
+
+	var publicKeys []*common.PublicKey
+	var revokedKey *common.PublicKey
+	for _, key := range bundle.JwtSigningKeys {
+		if key.Kid == keyID {
+			// Check if a JWT Key with the provided keyID was already
+			// found in this loop. This is purely defensive since we do not
+			// allow to have repeated key IDs.
+			if revokedKey != nil {
+				return nil, status.Error(codes.Internal, "another key found with the same KeyID")
+			}
+
+			if !key.TaintedKey {
+				return nil, status.Error(codes.InvalidArgument, "it is not possible to revoke an untainted key")
+			}
+
+			revokedKey = key
+			continue
+		}
+		publicKeys = append(publicKeys, key)
+	}
+	bundle.JwtSigningKeys = publicKeys
+
+	if revokedKey == nil {
+		return nil, status.Error(codes.NotFound, "no JWT Key found with provided key ID")
+	}
+
+	if _, err := updateBundle(tx, bundle, nil); err != nil {
+		return nil, err
+	}
+
+	return revokedKey, nil
+}
+
+func getBundle(tx *gorm.DB, trustDomainID string) (*common.Bundle, error) {
 	model := &Bundle{}
 	if err := tx.Find(model, "trust_domain = ?", trustDomainID).Error; err != nil {
-		return nil, nil, sqlError.Wrap(err)
+		return nil, sqlError.Wrap(err)
 	}
 
 	bundle, err := modelToBundle(model)
 	if err != nil {
-		return nil, nil, status.Errorf(codes.Internal, "failed to unmarshal bundle: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to unmarshal bundle: %v", err)
 	}
 
-	return model, bundle, nil
+	return bundle, nil
 }
 
 func createAttestedNode(tx *gorm.DB, node *common.AttestedNode) (*common.AttestedNode, error) {
@@ -1678,7 +1717,7 @@ FROM attested_node_entries N
 	writeFilter := func() error {
 		builder.WriteString("WHERE true")
 
-		// Filter by paginatioin token
+		// Filter by pagination token
 		if req.Pagination != nil && req.Pagination.Token != "" {
 			token, err := strconv.ParseUint(req.Pagination.Token, 10, 32)
 			if err != nil {
@@ -1862,7 +1901,7 @@ func setNodeSelectors(tx *gorm.DB, spiffeID string, selectors []*common.Selector
 	// deadlocks when SetNodeSelectors was being called concurrently. Changing
 	// the transaction isolation level fixed the deadlocks but only when there
 	// were no existing rows; the deadlocks still occurred when existing rows
-	// existed (i.e. reattestation). Instead, gather all of the IDs to be
+	// existed (i.e. re-attestation). Instead, gather all of the IDs to be
 	// deleted and delete them from separate queries, which does not trigger
 	// gap locks on the index.
 	var ids []int64
@@ -2116,6 +2155,7 @@ SELECT
 	expiry,
 	store_svid,
 	hint,
+	created_at,
 	NULL AS selector_id,
 	NULL AS selector_type,
 	NULL AS selector_value,
@@ -2131,7 +2171,7 @@ WHERE id IN (SELECT id FROM listing)
 UNION
 
 SELECT
-	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
+	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
 FROM
 	bundles B
 INNER JOIN
@@ -2144,7 +2184,7 @@ WHERE
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
 FROM
 	dns_names
 WHERE registered_entry_id IN (SELECT id FROM listing)
@@ -2152,7 +2192,7 @@ WHERE registered_entry_id IN (SELECT id FROM listing)
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
 FROM
 	selectors
 WHERE registered_entry_id IN (SELECT id FROM listing)
@@ -2178,6 +2218,7 @@ SELECT
 	expiry,
 	store_svid,
 	hint,
+	created_at,
 	NULL ::integer AS selector_id,
 	NULL AS selector_type,
 	NULL AS selector_value,
@@ -2193,7 +2234,7 @@ WHERE id IN (SELECT id FROM listing)
 UNION
 
 SELECT
-	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
+	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
 FROM
 	bundles B
 INNER JOIN
@@ -2206,7 +2247,7 @@ WHERE
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
 FROM
 	dns_names
 WHERE registered_entry_id IN (SELECT id FROM listing)
@@ -2214,7 +2255,7 @@ WHERE registered_entry_id IN (SELECT id FROM listing)
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
 FROM
 	selectors
 WHERE registered_entry_id IN (SELECT id FROM listing)
@@ -2237,6 +2278,7 @@ SELECT
 	E.expiry,
 	E.store_svid,
 	E.hint,
+	E.created_at,
 	S.id AS selector_id,
 	S.type AS selector_type,
 	S.value AS selector_value,
@@ -2277,6 +2319,7 @@ SELECT
 	expiry,
 	store_svid,
 	hint,
+	created_at,
 	NULL AS selector_id,
 	NULL AS selector_type,
 	NULL AS selector_value,
@@ -2292,7 +2335,7 @@ WHERE id IN (SELECT id FROM listing)
 UNION
 
 SELECT
-	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
+	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
 FROM
 	bundles B
 INNER JOIN
@@ -2305,7 +2348,7 @@ WHERE
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
 FROM
 	dns_names
 WHERE registered_entry_id IN (SELECT id FROM listing)
@@ -2313,7 +2356,7 @@ WHERE registered_entry_id IN (SELECT id FROM listing)
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
 FROM
 	selectors
 WHERE registered_entry_id IN (SELECT id FROM listing)
@@ -2526,6 +2569,7 @@ SELECT
 	expiry,
 	store_svid,
 	hint,
+	created_at,
 	NULL AS selector_id,
 	NULL AS selector_type,
 	NULL AS selector_value,
@@ -2544,7 +2588,7 @@ FROM
 UNION
 
 SELECT
-	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
+	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
 FROM
 	bundles B
 INNER JOIN
@@ -2559,7 +2603,7 @@ ON
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
 FROM
 	dns_names
 `)
@@ -2570,7 +2614,7 @@ FROM
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
 FROM
 	selectors
 `)
@@ -2607,6 +2651,7 @@ SELECT
 	expiry,
 	store_svid,
 	hint,
+	created_at,
 	NULL ::integer AS selector_id,
 	NULL AS selector_type,
 	NULL AS selector_value,
@@ -2625,7 +2670,7 @@ FROM
 UNION
 
 SELECT
-	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
+	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
 FROM
 	bundles B
 INNER JOIN
@@ -2640,7 +2685,7 @@ ON
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
 FROM
 	dns_names
 `)
@@ -2651,7 +2696,7 @@ FROM
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
 FROM
 	selectors
 `)
@@ -2692,6 +2737,7 @@ SELECT
 	E.expiry,
 	E.store_svid,
 	E.hint,
+	E.created_at,
 	S.id AS selector_id,
 	S.type AS selector_type,
 	S.value AS selector_value,
@@ -2749,6 +2795,7 @@ SELECT
 	expiry,
 	store_svid,
 	hint,
+	created_at,
 	NULL AS selector_id,
 	NULL AS selector_type,
 	NULL AS selector_value,
@@ -2767,7 +2814,7 @@ FROM
 UNION
 
 SELECT
-	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
+	F.registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, B.trust_domain, NULL, NULL, NULL, NULL
 FROM
 	bundles B
 INNER JOIN
@@ -2782,7 +2829,7 @@ ON
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, value, NULL, NULL
 FROM
 	dns_names
 `)
@@ -2793,7 +2840,7 @@ FROM
 UNION
 
 SELECT
-	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
+	registered_entry_id, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, id, type, value, NULL, NULL, NULL, NULL, NULL
 FROM
 	selectors
 `)
@@ -2986,7 +3033,7 @@ func appendListRegistrationEntriesFilterQuery(filterExp string, builder *strings
 				root.children = append(root.children, group)
 			}
 		case datastore.Exact, datastore.Superset:
-			// exact match does uses an intersection, so we can just add these
+			// exact match does use an intersection, so we can just add these
 			// directly to the root idFilterNode, since it is already an intersection
 			for range req.BySelectors.Selectors {
 				root.children = append(root.children, idFilterNode{
@@ -3253,6 +3300,7 @@ type entryRow struct {
 	SelectorValue  sql.NullString
 	StoreSvid      sql.NullBool
 	Hint           sql.NullString
+	CreatedAt      sql.NullTime
 	TrustDomain    sql.NullString
 	DNSNameID      sql.NullInt64
 	DNSName        sql.NullString
@@ -3272,6 +3320,7 @@ func scanEntryRow(rs *sql.Rows, r *entryRow) error {
 		&r.Expiry,
 		&r.StoreSvid,
 		&r.Hint,
+		&r.CreatedAt,
 		&r.SelectorID,
 		&r.SelectorType,
 		&r.SelectorValue,
@@ -3308,7 +3357,6 @@ func fillEntryFromRow(entry *common.RegistrationEntry, r *entryRow) error {
 	if r.RevisionNumber.Valid {
 		entry.RevisionNumber = r.RevisionNumber.Int64
 	}
-
 	if r.SelectorType.Valid {
 		if !r.SelectorValue.Valid {
 			return sqlError.New("expected non-nil selector.value value for entry id %s", entry.EntryId)
@@ -3318,26 +3366,25 @@ func fillEntryFromRow(entry *common.RegistrationEntry, r *entryRow) error {
 			Value: r.SelectorValue.String,
 		})
 	}
-
 	if r.DNSName.Valid {
 		entry.DnsNames = append(entry.DnsNames, r.DNSName.String)
 	}
-
 	if r.TrustDomain.Valid {
 		entry.FederatesWith = append(entry.FederatesWith, r.TrustDomain.String)
 	}
-
 	if r.RegTTL.Valid {
 		entry.X509SvidTtl = int32(r.RegTTL.Int64)
 	}
-
 	if r.RegJwtSvidTTL.Valid {
 		entry.JwtSvidTtl = int32(r.RegJwtSvidTTL.Int64)
 	}
-
 	if r.Hint.Valid {
 		entry.Hint = r.Hint.String
 	}
+	if r.CreatedAt.Valid {
+		entry.CreatedAt = roundedCreatedAtInSeconds(r.CreatedAt.Time)
+	}
+
 	return nil
 }
 
@@ -3620,7 +3667,7 @@ func fetchFederationRelationship(tx *gorm.DB, trustDomain spiffeid.TrustDomain) 
 	return modelToFederationRelationship(tx, &model)
 }
 
-// listFederationRelationships can be used to fetch all existing federation relationshops.
+// listFederationRelationships can be used to fetch all existing federation relationships.
 func listFederationRelationships(tx *gorm.DB, req *datastore.ListFederationRelationshipsRequest) (*datastore.ListFederationRelationshipsResponse, error) {
 	if req.Pagination != nil && req.Pagination.PageSize == 0 {
 		return nil, status.Error(codes.InvalidArgument, "cannot paginate with pagesize = 0")
@@ -3642,7 +3689,7 @@ func listFederationRelationships(tx *gorm.DB, req *datastore.ListFederationRelat
 
 	if p != nil {
 		p.Token = ""
-		// Set token only if page size is the same than federationRelationships len
+		// Set token only if page size is the same as federationRelationships len
 		if len(federationRelationships) > 0 {
 			lastEntry := federationRelationships[len(federationRelationships)-1]
 			p.Token = fmt.Sprint(lastEntry.ID)
@@ -3925,6 +3972,7 @@ func modelToEntry(tx *gorm.DB, model RegisteredEntry) (*common.RegistrationEntry
 		StoreSvid:      model.StoreSvid,
 		JwtSvidTtl:     model.JWTSvidTTL,
 		Hint:           model.Hint,
+		CreatedAt:      roundedCreatedAtInSeconds(model.CreatedAt),
 	}, nil
 }
 
@@ -4076,4 +4124,10 @@ func lookupSimilarEntry(ctx context.Context, db *sqlDB, tx *gorm.DB, entry *comm
 	default:
 		return nil, nil
 	}
+}
+
+// roundCreatedAtInSeconds rounds the createdAt time to the nearest second, and return the time in seconds since the
+// unix epoch. This function is used to avoid issues with databases versions that do not support sub-second precision.
+func roundedCreatedAtInSeconds(createdAt time.Time) int64 {
+	return createdAt.Round(time.Second).Unix()
 }

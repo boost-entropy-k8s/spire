@@ -734,7 +734,7 @@ func (s *PluginSuite) TestTaintJWTKey() {
 
 	// Key not found
 	publicKey, err = s.ds.TaintJWTKey(ctx, "spiffe://foo", "no id")
-	spiretest.RequireGRPCStatus(t, err, codes.NotFound, "no JWT Key found with provided public key")
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, "no JWT Key found with provided key ID")
 	require.Nil(t, publicKey)
 
 	// Taint successfully
@@ -756,6 +756,68 @@ func (s *PluginSuite) TestTaintJWTKey() {
 	publicKey, err = s.ds.TaintJWTKey(ctx, "spiffe://foo", "key1")
 	spiretest.RequireGRPCStatus(t, err, codes.InvalidArgument, "key is already tainted")
 	require.Nil(t, publicKey)
+}
+
+func (s *PluginSuite) TestRevokeJWTKey() {
+	t := s.T()
+	// Setup
+	// Create new bundle with two JWT Keys
+	bundle := bundleutil.BundleProtoFromRootCAs("spiffe://foo", nil)
+	bundle.JwtSigningKeys = []*common.PublicKey{
+		{Kid: "key1"},
+		{Kid: "key2"},
+	}
+
+	// Bundle not found
+	publicKey, err := s.ds.RevokeJWTKey(ctx, "spiffe://foo", "key1")
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, _notFoundErrMsg)
+	require.Nil(t, publicKey)
+
+	_, err = s.ds.CreateBundle(ctx, bundle)
+	require.NoError(t, err)
+
+	// Key not found
+	publicKey, err = s.ds.RevokeJWTKey(ctx, "spiffe://foo", "no id")
+	spiretest.RequireGRPCStatus(t, err, codes.NotFound, "no JWT Key found with provided key ID")
+	require.Nil(t, publicKey)
+
+	// No allow to revoke untainted key
+	publicKey, err = s.ds.RevokeJWTKey(ctx, "spiffe://foo", "key1")
+	spiretest.RequireGRPCStatus(t, err, codes.InvalidArgument, "it is not possible to revoke an untainted key")
+	require.Nil(t, publicKey)
+
+	// Add a duplicated key and taint it
+	bundle.JwtSigningKeys = []*common.PublicKey{
+		{Kid: "key1"},
+		{Kid: "key2", TaintedKey: true},
+		{Kid: "key2", TaintedKey: true},
+	}
+	_, err = s.ds.UpdateBundle(ctx, bundle, nil)
+	require.NoError(t, err)
+
+	// No allow to revoke because a duplicated key is found
+	publicKey, err = s.ds.RevokeJWTKey(ctx, "spiffe://foo", "key2")
+	spiretest.RequireGRPCStatus(t, err, codes.Internal, "another key found with the same KeyID")
+	require.Nil(t, publicKey)
+
+	// Remove duplicated key
+	bundle.JwtSigningKeys = []*common.PublicKey{
+		{Kid: "key1"},
+		{Kid: "key2", TaintedKey: true},
+	}
+	_, err = s.ds.UpdateBundle(ctx, bundle, nil)
+	require.NoError(t, err)
+
+	// Revoke successfully
+	publicKey, err = s.ds.RevokeJWTKey(ctx, "spiffe://foo", "key2")
+	require.NoError(t, err)
+	require.Equal(t, &common.PublicKey{Kid: "key2", TaintedKey: true}, publicKey)
+
+	fetchedBundle, err := s.ds.FetchBundle(ctx, "spiffe://foo")
+	require.NoError(t, err)
+
+	expectedJWTKeys := []*common.PublicKey{{Kid: "key1"}}
+	require.Equal(t, expectedJWTKeys, fetchedBundle.JwtSigningKeys)
 }
 
 func (s *PluginSuite) TestCreateAttestedNode() {
@@ -782,7 +844,7 @@ func (s *PluginSuite) TestFetchAttestedNodeMissing() {
 }
 
 func (s *PluginSuite) TestListAttestedNodes() {
-	// Connection is never used, each test creates a connection to a diffent database
+	// Connection is never used, each test creates a connection to a different database
 	s.ds.Close()
 
 	now := time.Now()
@@ -1515,6 +1577,7 @@ func (s *PluginSuite) TestSetNodeSelectorsUnderLoad() {
 }
 
 func (s *PluginSuite) TestCreateRegistrationEntry() {
+	now := time.Now().Unix()
 	var validRegistrationEntries []*common.RegistrationEntry
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "valid_registration_entries.json"), &validRegistrationEntries)
 
@@ -1524,6 +1587,8 @@ func (s *PluginSuite) TestCreateRegistrationEntry() {
 		s.Require().NotNil(registrationEntry)
 		s.NotEmpty(registrationEntry.EntryId)
 		registrationEntry.EntryId = ""
+		s.assertCreatedAtField(registrationEntry, now)
+		registrationEntry.CreatedAt = validRegistrationEntry.CreatedAt
 		s.RequireProtoEqual(registrationEntry, validRegistrationEntry)
 	}
 }
@@ -2413,6 +2478,7 @@ func (s *PluginSuite) testListRegistrationEntries(dataConsistency datastore.Data
 					}
 					// Some databases are not returning federated IDs in the same order (e.g. mysql)
 					sort.Strings(actualEntriesOut[id].FederatesWith)
+					s.assertCreatedAtField(actualEntriesOut[id], expectedEntry.CreatedAt)
 					spiretest.AssertProtoEqual(t, expectedEntry, actualEntriesOut[id])
 				}
 			})
@@ -2476,6 +2542,7 @@ func (s *PluginSuite) TestUpdateRegistrationEntry() {
 	s.Require().True(updatedRegistrationEntry.Admin)
 	s.Require().True(updatedRegistrationEntry.Downstream)
 	s.Require().Equal("internal", updatedRegistrationEntry.Hint)
+	s.Require().Equal(entry.CreatedAt, updatedRegistrationEntry.CreatedAt)
 
 	registrationEntry, err := s.ds.FetchRegistrationEntry(ctx, entry.EntryId)
 	s.Require().NoError(err)
@@ -2529,6 +2596,7 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
 	// we try with good data, bad data, and with or without a mask (so 4 cases each.)
 
 	// Note that most of the input validation is done in the API layer and has more extensive tests there.
+	now := time.Now().Unix()
 	oldEntry := &common.RegistrationEntry{
 		ParentId:      "spiffe://example.org/oldParentId",
 		SpiffeId:      "spiffe://example.org/oldSpiffeId",
@@ -2761,12 +2829,15 @@ func (s *PluginSuite) TestUpdateRegistrationEntryWithMask() {
 			tt.result(expectedResult)
 			expectedResult.EntryId = id
 			expectedResult.RevisionNumber++
+			s.assertCreatedAtField(updatedRegistrationEntry, now)
 			s.RequireProtoEqual(expectedResult, updatedRegistrationEntry)
 
 			// Fetch and check the results match expectations
 			registrationEntry, err = s.ds.FetchRegistrationEntry(ctx, id)
 			s.Require().NoError(err)
 			s.Require().NotNil(registrationEntry)
+
+			s.assertCreatedAtField(registrationEntry, now)
 
 			s.RequireProtoEqual(expectedResult, registrationEntry)
 		})
@@ -2822,6 +2893,7 @@ func (s *PluginSuite) TestDeleteRegistrationEntry() {
 }
 
 func (s *PluginSuite) TestListParentIDEntries() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries.json"), &allEntries)
 	tests := []struct {
@@ -2859,12 +2931,14 @@ func (s *PluginSuite) TestListParentIDEntries() {
 				ByParentID: test.parentID,
 			})
 			require.NoError(t, err)
+			s.assertCreatedAtFields(result, now)
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListSelectorEntries() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries.json"), &allEntries)
 	tests := []struct {
@@ -2910,12 +2984,14 @@ func (s *PluginSuite) TestListSelectorEntries() {
 				},
 			})
 			require.NoError(t, err)
+			s.assertCreatedAtFields(result, now)
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListEntriesBySelectorSubset() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries.json"), &allEntries)
 	tests := []struct {
@@ -2967,12 +3043,14 @@ func (s *PluginSuite) TestListEntriesBySelectorSubset() {
 			require.NoError(t, err)
 			util.SortRegistrationEntries(test.expectedList)
 			util.SortRegistrationEntries(result.Entries)
+			s.assertCreatedAtFields(result, now)
 			s.RequireProtoListEqual(test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListSelectorEntriesSuperset() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries.json"), &allEntries)
 	tests := []struct {
@@ -3020,12 +3098,14 @@ func (s *PluginSuite) TestListSelectorEntriesSuperset() {
 				},
 			})
 			require.NoError(t, err)
+			s.assertCreatedAtFields(result, now)
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListEntriesBySelectorMatchAny() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries.json"), &allEntries)
 	tests := []struct {
@@ -3088,12 +3168,14 @@ func (s *PluginSuite) TestListEntriesBySelectorMatchAny() {
 			require.NoError(t, err)
 			util.SortRegistrationEntries(test.expectedList)
 			util.SortRegistrationEntries(result.Entries)
+			s.assertCreatedAtFields(result, now)
 			s.RequireProtoListEqual(test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListEntriesByFederatesWithExact() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries_federates_with.json"), &allEntries)
 	tests := []struct {
@@ -3161,12 +3243,16 @@ func (s *PluginSuite) TestListEntriesByFederatesWithExact() {
 			require.NoError(t, err)
 			util.SortRegistrationEntries(test.expectedList)
 			util.SortRegistrationEntries(result.Entries)
+
+			s.assertCreatedAtFields(result, now)
+
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListEntriesByFederatesWithSubset() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries_federates_with.json"), &allEntries)
 	tests := []struct {
@@ -3225,12 +3311,14 @@ func (s *PluginSuite) TestListEntriesByFederatesWithSubset() {
 			require.NoError(t, err)
 			util.SortRegistrationEntries(test.expectedList)
 			util.SortRegistrationEntries(result.Entries)
+			s.assertCreatedAtFields(result, now)
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListEntriesByFederatesWithMatchAny() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries_federates_with.json"), &allEntries)
 	tests := []struct {
@@ -3296,12 +3384,14 @@ func (s *PluginSuite) TestListEntriesByFederatesWithMatchAny() {
 			require.NoError(t, err)
 			util.SortRegistrationEntries(test.expectedList)
 			util.SortRegistrationEntries(result.Entries)
+			s.assertCreatedAtFields(result, now)
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
 }
 
 func (s *PluginSuite) TestListEntriesByFederatesWithSuperset() {
+	now := time.Now().Unix()
 	allEntries := make([]*common.RegistrationEntry, 0)
 	s.getTestDataFromJSONFile(filepath.Join("testdata", "entries_federates_with.json"), &allEntries)
 	tests := []struct {
@@ -3366,6 +3456,7 @@ func (s *PluginSuite) TestListEntriesByFederatesWithSuperset() {
 			require.NoError(t, err)
 			util.SortRegistrationEntries(test.expectedList)
 			util.SortRegistrationEntries(result.Entries)
+			s.assertCreatedAtFields(result, now)
 			spiretest.RequireProtoListEqual(t, test.expectedList, result.Entries)
 		})
 	}
@@ -3416,7 +3507,7 @@ func (s *PluginSuite) TestDeleteBundleDeleteRegistrationEntries() {
 	err := s.ds.DeleteBundle(context.Background(), "spiffe://otherdomain.org", datastore.Delete)
 	s.Require().NoError(err)
 
-	// verify that the registeration entry has been deleted
+	// verify that the registration entry has been deleted
 	registrationEntry, err := s.ds.FetchRegistrationEntry(context.Background(), entry.EntryId)
 	s.Require().NoError(err)
 	s.Require().Nil(registrationEntry)
@@ -3637,7 +3728,7 @@ func (s *PluginSuite) TestFetchFederationRelationship() {
 			}(),
 		},
 		{
-			name:        "fetching an unexistent federation relationship returns nil",
+			name:        "fetching a non-existent federation relationship returns nil",
 			trustDomain: spiffeid.RequireTrustDomainFromString("non-existent-td.org"),
 		},
 		{
@@ -4475,6 +4566,18 @@ func (s *PluginSuite) TestConfigure() {
 			require.Equal(t, tt.expectIdle, db.Stats().Idle)
 		})
 	}
+}
+
+func (s *PluginSuite) assertCreatedAtFields(result *datastore.ListRegistrationEntriesResponse, now int64) {
+	for _, entry := range result.Entries {
+		s.assertCreatedAtField(entry, now)
+	}
+}
+
+func (s *PluginSuite) assertCreatedAtField(entry *common.RegistrationEntry, now int64) {
+	// We can't compare the exact time because we don't have control over the clock used by the database.
+	s.Assert().GreaterOrEqual(entry.CreatedAt, now)
+	entry.CreatedAt = 0
 }
 
 // assertBundlesEqual asserts that the two bundle lists are equal independent
