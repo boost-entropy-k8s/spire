@@ -3,10 +3,10 @@ module github.com/spiffe/spire
 go 1.19
 
 require (
-	cloud.google.com/go/iam v0.12.0
-	cloud.google.com/go/kms v1.9.0
+	cloud.google.com/go/iam v0.13.0
+	cloud.google.com/go/kms v1.10.0
 	cloud.google.com/go/secretmanager v1.10.0
-	cloud.google.com/go/security v1.12.0
+	cloud.google.com/go/security v1.13.0
 	cloud.google.com/go/storage v1.30.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.2
@@ -51,14 +51,14 @@ require (
 	github.com/lib/pq v1.10.7
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/cli v1.1.5
-	github.com/open-policy-agent/opa v0.50.1
+	github.com/open-policy-agent/opa v0.50.2
 	github.com/prometheus/client_golang v1.14.0
 	github.com/shirou/gopsutil/v3 v3.23.2
 	github.com/sigstore/cosign v1.13.1
 	github.com/sigstore/rekor v1.0.1
 	github.com/sigstore/sigstore v1.5.2
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spiffe/go-spiffe/v2 v2.1.2
+	github.com/spiffe/go-spiffe/v2 v2.1.3
 	github.com/spiffe/spire-api-sdk v1.2.5-0.20230315170933-494fe186be48
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20230203133000-75d7213a0ba0
 	github.com/stretchr/testify v1.8.2
@@ -76,8 +76,8 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.26.3
-	k8s.io/client-go v0.26.2
-	k8s.io/kube-aggregator v0.26.2
+	k8s.io/client-go v0.26.3
+	k8s.io/kube-aggregator v0.26.3
 	sigs.k8s.io/controller-runtime v0.14.5
 )
 
