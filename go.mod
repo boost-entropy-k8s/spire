@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cloud.google.com/go/iam v1.0.0
-	cloud.google.com/go/kms v1.10.0
+	cloud.google.com/go/kms v1.10.1
 	cloud.google.com/go/secretmanager v1.10.0
 	cloud.google.com/go/security v1.13.0
 	cloud.google.com/go/storage v1.30.1
@@ -32,12 +32,12 @@ require (
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/envoyproxy/go-control-plane v0.11.0
 	github.com/go-sql-driver/mysql v1.7.0
-	github.com/gofrs/uuid v4.4.0+incompatible
+	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.14.0
 	github.com/google/go-tpm v0.3.3
-	github.com/google/go-tpm-tools v0.3.10
+	github.com/google/go-tpm-tools v0.3.11
 	github.com/googleapis/gax-go/v2 v2.8.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/hashicorp/go-hclog v1.5.0
@@ -195,7 +195,7 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-github/v45 v45.2.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/go-sev-guest v0.4.1 // indirect
+	github.com/google/go-sev-guest v0.5.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/logger v1.1.1 // indirect
 	github.com/google/s2a-go v0.1.0 // indirect
