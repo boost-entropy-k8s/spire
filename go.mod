@@ -52,14 +52,14 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/cli v1.1.5
 	github.com/open-policy-agent/opa v0.51.0
-	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/client_golang v1.15.0
 	github.com/shirou/gopsutil/v3 v3.23.3
 	github.com/sigstore/cosign v1.13.1
 	github.com/sigstore/rekor v1.0.1
 	github.com/sigstore/sigstore v1.5.2
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spiffe/go-spiffe/v2 v2.1.4
-	github.com/spiffe/spire-api-sdk v1.2.5-0.20230315170933-494fe186be48
+	github.com/spiffe/spire-api-sdk v1.2.5-0.20230413135745-699e242b965d
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20230203133000-75d7213a0ba0
 	github.com/stretchr/testify v1.8.2
 	github.com/uber-go/tally/v4 v4.1.7
@@ -69,7 +69,7 @@ require (
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.7.0
 	golang.org/x/time v0.3.0
-	google.golang.org/api v0.117.0
+	google.golang.org/api v0.118.0
 	google.golang.org/genproto v0.0.0-20230403163135-c38d8f061ccd
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
@@ -265,8 +265,8 @@ require (
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.37.0 // indirect
-	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/prometheus/common v0.42.0 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
