@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/iam v1.0.0
 	cloud.google.com/go/kms v1.10.1
 	cloud.google.com/go/secretmanager v1.10.0
-	cloud.google.com/go/security v1.13.0
+	cloud.google.com/go/security v1.14.0
 	cloud.google.com/go/storage v1.30.1
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.5.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.2
@@ -43,7 +43,7 @@ require (
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-plugin v1.4.6
 	github.com/hashicorp/hcl v1.0.1-0.20190430135223-99e2f22d1c94
-	github.com/hashicorp/vault/api v1.9.0
+	github.com/hashicorp/vault/api v1.9.1
 	github.com/hashicorp/vault/sdk v0.9.0
 	github.com/imdario/mergo v0.3.15
 	github.com/imkira/go-observer v1.0.3
@@ -64,7 +64,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/uber-go/tally/v4 v4.1.7
 	github.com/zeebo/errs v1.3.0
-	golang.org/x/crypto v0.7.0
+	golang.org/x/crypto v0.8.0
 	golang.org/x/net v0.9.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.7.0
