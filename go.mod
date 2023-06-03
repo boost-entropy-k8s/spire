@@ -51,7 +51,7 @@ require (
 	github.com/imkira/go-observer v1.0.3
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/mitchellh/cli v1.1.5
 	github.com/open-policy-agent/opa v0.53.0
 	github.com/prometheus/client_golang v1.15.1
@@ -60,10 +60,10 @@ require (
 	github.com/sigstore/rekor v1.2.1
 	github.com/sigstore/sigstore v1.6.4
 	github.com/sirupsen/logrus v1.9.2
-	github.com/spiffe/go-spiffe/v2 v2.1.4
+	github.com/spiffe/go-spiffe/v2 v2.1.5
 	github.com/spiffe/spire-api-sdk v1.2.5-0.20230413135745-699e242b965d
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20230224144655-648f8c740f73
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/uber-go/tally/v4 v4.1.7
 	github.com/zeebo/errs v1.3.0
 	golang.org/x/crypto v0.9.0
