@@ -65,7 +65,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.12
 	github.com/sigstore/cosign/v2 v2.2.2
 	github.com/sigstore/rekor v1.3.4
-	github.com/sigstore/sigstore v1.8.0
+	github.com/sigstore/sigstore v1.8.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spiffe/go-spiffe/v2 v2.1.6
 	github.com/spiffe/spire-api-sdk v1.2.5-0.20231107161112-ba57e0e943a2
@@ -83,10 +83,10 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240116215550-a9fa1716bcac
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
-	k8s.io/api v0.29.0
-	k8s.io/apimachinery v0.29.0
-	k8s.io/client-go v0.29.0
-	k8s.io/kube-aggregator v0.29.0
+	k8s.io/api v0.29.1
+	k8s.io/apimachinery v0.29.1
+	k8s.io/client-go v0.29.1
+	k8s.io/kube-aggregator v0.29.1
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
@@ -323,7 +323,7 @@ require (
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.15.0 // indirect
+	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240102182953-50ed04b92917 // indirect
