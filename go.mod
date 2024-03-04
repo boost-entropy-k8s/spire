@@ -55,7 +55,7 @@ require (
 	github.com/hashicorp/vault/sdk v0.11.0
 	github.com/imdario/mergo v0.3.16
 	github.com/imkira/go-observer v1.0.3
-	github.com/jackc/pgx/v5 v5.5.3
+	github.com/jackc/pgx/v5 v5.5.4
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lestrrat-go/jwx/v2 v2.0.20
 	github.com/lib/pq v1.10.9
@@ -71,7 +71,7 @@ require (
 	github.com/spiffe/go-spiffe/v2 v2.1.7
 	github.com/spiffe/spire-api-sdk v1.2.5-0.20231107161112-ba57e0e943a2
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20230721151831-bf67dde4721d
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/uber-go/tally/v4 v4.1.11
 	github.com/valyala/fastjson v1.6.4
 	github.com/zeebo/errs v1.3.0
