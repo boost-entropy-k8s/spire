@@ -44,7 +44,7 @@ require (
 	github.com/gogo/status v1.1.1
 	github.com/google/btree v1.1.2
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-containerregistry v0.20.1
+	github.com/google/go-containerregistry v0.20.2
 	github.com/google/go-tpm v0.9.1
 	github.com/google/go-tpm-tools v0.4.4
 	github.com/googleapis/gax-go/v2 v2.13.0
@@ -81,7 +81,7 @@ require (
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
 	golang.org/x/net v0.27.0
 	golang.org/x/sync v0.8.0
-	golang.org/x/sys v0.22.0
+	golang.org/x/sys v0.24.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.190.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf
@@ -169,7 +169,7 @@ require (
 	github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v24.0.7+incompatible // indirect
+	github.com/docker/cli v27.1.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
