@@ -72,7 +72,7 @@ require (
 	github.com/sigstore/sigstore v1.8.12
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spiffe/go-spiffe/v2 v2.5.0
-	github.com/spiffe/spire-api-sdk v1.2.5-0.20240916165922-16526993814a
+	github.com/spiffe/spire-api-sdk v1.2.5-0.20250109200630-101d5e7de758
 	github.com/spiffe/spire-plugin-sdk v1.4.4-0.20240701180828-594312f4444d
 	github.com/stretchr/testify v1.10.0
 	github.com/uber-go/tally/v4 v4.1.16
@@ -87,11 +87,11 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250127172529-29210b9bc287
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
-	k8s.io/api v0.32.1
-	k8s.io/apimachinery v0.32.1
-	k8s.io/client-go v0.32.1
-	k8s.io/kube-aggregator v0.32.1
-	k8s.io/mount-utils v0.32.1
+	k8s.io/api v0.32.2
+	k8s.io/apimachinery v0.32.2
+	k8s.io/client-go v0.32.2
+	k8s.io/kube-aggregator v0.32.2
+	k8s.io/mount-utils v0.32.2
 	sigs.k8s.io/controller-runtime v0.20.1
 )
 
