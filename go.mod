@@ -36,7 +36,7 @@ require (
 	github.com/aws/smithy-go v1.22.3
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/docker/docker v28.0.3+incompatible
+	github.com/docker/docker v28.0.4+incompatible
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa
 	github.com/go-jose/go-jose/v4 v4.0.5
@@ -59,7 +59,7 @@ require (
 	github.com/hashicorp/vault/sdk v0.15.2
 	github.com/imdario/mergo v0.3.16
 	github.com/imkira/go-observer v1.0.3
-	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jackc/pgx/v5 v5.7.4
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.24
@@ -92,7 +92,7 @@ require (
 	k8s.io/client-go v0.32.3
 	k8s.io/kube-aggregator v0.32.3
 	k8s.io/mount-utils v0.32.3
-	sigs.k8s.io/controller-runtime v0.20.3
+	sigs.k8s.io/controller-runtime v0.20.4
 )
 
 require (
